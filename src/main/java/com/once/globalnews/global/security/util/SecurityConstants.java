@@ -11,6 +11,7 @@ import java.util.List;
 public class SecurityConstants {
     public static final List<String> ALLOW_URLS = List.of(
             "/api/v1/auth/callback",
+            "/api/v1/auth/refresh",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/v3/api-docs/**",

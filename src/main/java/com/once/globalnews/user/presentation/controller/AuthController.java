@@ -7,9 +7,9 @@ import com.once.globalnews.global.security.jwt.JwtTokenProvider;
 import com.once.globalnews.global.security.jwt.RefreshTokenService;
 import com.once.globalnews.global.security.util.AuthCookieFactory;
 import com.once.globalnews.user.application.AuthService;
-import com.once.globalnews.user.application.UserService;
 import com.once.globalnews.user.domain.User;
 import com.once.globalnews.user.presentation.model.response.AccessTokenResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,10 +47,31 @@ public class AuthController {
         refreshTokenService.store(newRefreshToken, user.getId(), Duration.ofSeconds(refreshTokenValidityInSeconds));
         response.addHeader(HttpHeaders.SET_COOKIE, authCookieFactory.buildRefreshCookie(newRefreshToken, refreshTokenValidityInSeconds).toString());
 
-        boolean isFirstLogin = "globalnews-new-kakao-user".equals(user.getNickname());
         return ApiResponse.onSuccess(
                 SuccessStatus.USER_KAKAO_LOGIN_SUCCESS,
-                new AccessTokenResponse(newAccessToken, isFirstLogin));
+                new AccessTokenResponse(newAccessToken, authService.isFirstLogin(user)));
+    }
+
+    @Operation(
+            summary = "accessToken 재발급",
+            description = "refreshToken으로 accessToken을 재발급 받습니다."
+    )
+    @PostMapping("/refresh")
+    public ApiResponse<AccessTokenResponse> refresh(
+            @CookieValue(name = "refresh_token", required = false) String refreshToken,
+            HttpServletResponse response
+    ) {
+        User user = authService.validateAndConsumeRefreshToken(refreshToken);
+        String newAccessToken = authService.createAccessToken(user);
+        String newRefreshToken = authService.createRefreshTokenAndStore(user);
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                authCookieFactory.buildRefreshCookie(newRefreshToken, authService.getRefreshTokenValidityInSeconds()).toString()
+        );
+        return ApiResponse.onSuccess(
+                SuccessStatus.OK,
+                new AccessTokenResponse(newAccessToken, authService.isFirstLogin(user))
+        );
     }
 
     @GetMapping("/test")

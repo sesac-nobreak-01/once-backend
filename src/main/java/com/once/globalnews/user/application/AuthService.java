@@ -2,6 +2,8 @@ package com.once.globalnews.user.application;
 
 import com.once.globalnews.global.common.exception.ServiceException;
 import com.once.globalnews.global.common.status.ErrorStatus;
+import com.once.globalnews.global.security.jwt.JwtTokenProvider;
+import com.once.globalnews.global.security.jwt.RefreshTokenService;
 import com.once.globalnews.user.domain.User;
 import com.once.globalnews.user.infrastructure.persistence.UserRepository;
 import com.once.globalnews.user.presentation.converter.UserConverter;
@@ -18,18 +20,24 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
-
+    private final RefreshTokenService refreshTokenService;
+    private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
     @Value("${kakao.client_id}")
     private String clientId;
 
     @Value("${kakao.redirect_uri}")
     private String redirectUri;
+
+    @Value("${jwt.refresh-token-validity-in-seconds}")
+    private long refreshTokenValidityInSeconds;
 
     private final String KAUTH_TOKEN_URL_HOST = "https://kauth.kakao.com";
     private final String KAUTH_USER_URL_HOST = "https://kapi.kakao.com";
@@ -125,5 +133,41 @@ public class AuthService {
         }
 
         return user;
+    }
+
+    public User validateAndConsumeRefreshToken(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw ErrorStatus.INVALID_TOKEN.serviceException();
+        }
+
+        Long tokenUserId = jwtTokenProvider.parseRefreshToken(refreshToken);
+        Long storedUserId = refreshTokenService.getUserId(refreshToken);
+        if (storedUserId == null || !storedUserId.equals(tokenUserId)) {
+            throw ErrorStatus.INVALID_TOKEN.serviceException();
+        }
+
+        User user = userRepository.findById(storedUserId)
+                .orElseThrow(ErrorStatus.NOT_AUTHORIZED::serviceException);
+
+        refreshTokenService.delete(refreshToken);
+        return user;
+    }
+
+    public String createAccessToken(User user) {
+        return jwtTokenProvider.createAccessToken(user);
+    }
+
+    public String createRefreshTokenAndStore(User user) {
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(user);
+        refreshTokenService.store(newRefreshToken, user.getId(), Duration.ofSeconds(refreshTokenValidityInSeconds));
+        return newRefreshToken;
+    }
+
+    public long getRefreshTokenValidityInSeconds() {
+        return refreshTokenValidityInSeconds;
+    }
+
+    public boolean isFirstLogin(User user) {
+        return "globalnews-new-kakao-user".equals(user.getNickname());
     }
 }
