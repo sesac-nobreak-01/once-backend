@@ -2,6 +2,7 @@ package com.once.globalnews.user.presentation.controller;
 
 import com.once.globalnews.global.common.model.ApiResponse;
 import com.once.globalnews.global.common.status.SuccessStatus;
+import com.once.globalnews.global.security.annotation.GlobalNewsUser;
 import com.once.globalnews.global.security.jwt.JwtTokenProvider;
 import com.once.globalnews.global.security.jwt.RefreshTokenService;
 import com.once.globalnews.global.security.util.AuthCookieFactory;
@@ -13,10 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 
@@ -51,5 +50,11 @@ public class AuthController {
         return ApiResponse.onSuccess(
                 SuccessStatus.USER_KAKAO_LOGIN_SUCCESS,
                 new AccessTokenResponse(newAccessToken, isFirstLogin));
+    }
+
+    @GetMapping("/test")
+    @ResponseStatus(HttpStatus.OK)
+    public String test(@GlobalNewsUser User user) {
+        return user.getNickname();
     }
 }

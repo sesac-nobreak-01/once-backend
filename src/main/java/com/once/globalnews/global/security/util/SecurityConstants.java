@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SecurityConstants {
     public static final List<String> ALLOW_URLS = List.of(
-            "/api/v1/auth/**",
+            "/api/v1/auth/callback",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/v3/api-docs/**",
