@@ -77,7 +77,7 @@ public class AuthController {
     @Operation(
             summary = "로그아웃"
     )
-    @PostMapping("/auth/logout")
+    @PostMapping("/logout")
     public ApiResponse<String> logout(
             @CookieValue(name = "refresh_token", required = false) String refreshToken,
             HttpServletResponse response
