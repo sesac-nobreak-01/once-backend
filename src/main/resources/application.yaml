@@ -1,3 +1,18 @@
 spring:
   application:
     name: globalnews
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-validity-in-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_IN_SECONDS}
+  refresh-token-validity-in-seconds: ${JWT_REFRESH_TOKEN_VALIDITY_IN_SECONDS}
+kakao:
+  client_id: ${REST_API_KEY}
+  redirect_uri: ${KAKAO_REDIRECT_URI}
