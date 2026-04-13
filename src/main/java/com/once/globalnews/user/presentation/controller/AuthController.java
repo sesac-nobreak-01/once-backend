@@ -74,6 +74,19 @@ public class AuthController {
         );
     }
 
+    @Operation(
+            summary = "로그아웃"
+    )
+    @PostMapping("/auth/logout")
+    public ApiResponse<String> logout(
+            @CookieValue(name = "refresh_token", required = false) String refreshToken,
+            HttpServletResponse response
+    ) {
+        authService.logout(refreshToken);
+        response.addHeader(HttpHeaders.SET_COOKIE, authCookieFactory.clearRefreshCookie().toString());
+        return ApiResponse.onSuccess(SuccessStatus.OK, "logout");
+    }
+
     @GetMapping("/test")
     @ResponseStatus(HttpStatus.OK)
     public String test(@GlobalNewsUser User user) {

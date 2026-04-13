@@ -170,4 +170,10 @@ public class AuthService {
     public boolean isFirstLogin(User user) {
         return "globalnews-new-kakao-user".equals(user.getNickname());
     }
+
+    public void logout(String refreshToken) {
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            refreshTokenService.delete(refreshToken);
+        }
+    }
 }
