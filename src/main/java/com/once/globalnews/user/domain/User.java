@@ -29,6 +29,11 @@ public class User extends BaseEntity {
     @Column(name = "profile_image", length = 255)
     private String profileImage;
 
+    public String updateNickname(String nickname) {
+        this.nickname = nickname;
+        return this.nickname;
+    }
+
     public String updateProfileImage(String profileImage) {
         this.profileImage = profileImage;
         return this.profileImage;

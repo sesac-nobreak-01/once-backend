@@ -7,6 +7,7 @@ import com.once.globalnews.global.security.jwt.JwtTokenProvider;
 import com.once.globalnews.global.security.jwt.RefreshTokenService;
 import com.once.globalnews.global.security.util.AuthCookieFactory;
 import com.once.globalnews.user.application.AuthService;
+import com.once.globalnews.user.application.UserService;
 import com.once.globalnews.user.domain.User;
 import com.once.globalnews.user.presentation.model.response.AccessTokenResponse;
 import jakarta.servlet.http.HttpServletResponse;
