@@ -1,0 +1,101 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  # RDS PostgreSQL 연결 설정
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://your-rds-endpoint.amazonaws.com:5432/once_db}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+    # Connection Pool 설정 (HikariCP)
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+      pool-name: OnceHikariCP
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # 프로덕션에서는 validate 사용
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        show_sql: false
+        jdbc:
+          batch_size: 25
+          batch_versioned_data: true
+        connection:
+          provider_disables_autocommit: true
+    open-in-view: false
+
+  # Redis 설정 (ElastiCache 사용 시)
+  data:
+    redis:
+      host: ${REDIS_HOST:your-elasticache-endpoint.amazonaws.com}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+# AWS Bedrock 설정
+aws:
+  bedrock:
+    region: ${AWS_REGION:ap-northeast-1}
+    model-id: ${BEDROCK_MODEL_ID:global.anthropic.claude-sonnet-4-6}
+    api-key: ${BEDROCK_API_KEY}
+    max-tokens: ${BEDROCK_MAX_TOKENS:4096}
+    temperature: ${BEDROCK_TEMPERATURE:0.7}
+
+# JWT 설정
+jwt:
+  secret-key: ${JWT_SECRET_KEY}
+  access-token-expiration: ${JWT_ACCESS_EXPIRATION:3600000}
+  refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:2592000000}
+
+# Kakao OAuth
+kakao:
+  client-id: ${KAKAO_CLIENT_ID}
+  redirect-uri: ${KAKAO_REDIRECT_URI:https://your-domain.com/api/v1/auth/kakao/callback}
+  admin-key: ${KAKAO_ADMIN_KEY}
+
+# Actuator 설정 (헬스체크용)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+# 로깅 설정
+logging:
+  level:
+    root: INFO
+    com.once.globalnews: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/once-backend/application.log
+    max-size: 10MB
+    max-history: 30

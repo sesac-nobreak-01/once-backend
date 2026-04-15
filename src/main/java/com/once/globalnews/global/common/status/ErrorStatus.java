@@ -29,7 +29,13 @@ public enum ErrorStatus {
     NOT_EXIST_ACCESSTOKEN(HttpStatus.BAD_REQUEST, "COMMON400","Access Token not exist"),
 
     // User Error
-    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "USER_DUPLICATE_NICKNAME","중복된 닉네임입니다.");
+    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "USER_DUPLICATE_NICKNAME","중복된 닉네임입니다."),
+
+    // Chat Error
+    CHAT_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT404", "채팅 세션을 찾을 수 없습니다."),
+    CHAT_MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT404", "채팅 메시지를 찾을 수 없습니다."),
+    CHAT_AI_SERVICE_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "CHAT503", "AI 서비스가 일시적으로 사용할 수 없습니다."),
+    CHAT_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "CHAT400", "잘못된 채팅 요청입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

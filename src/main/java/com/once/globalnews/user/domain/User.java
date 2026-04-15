@@ -14,7 +14,7 @@ import lombok.*;
 public class User extends BaseEntity {
 
     @Id
-    @Column(name = "id", nullable = false)
+    @Column(name = "user_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -26,8 +26,22 @@ public class User extends BaseEntity {
     @Column(name = "nickname", nullable = false, length = 50)
     private String nickname;
 
+    @Column(name = "email", length = 255)
+    private String email;
+
     @Column(name = "profile_image", length = 255)
     private String profileImage;
+
+    @Column(name = "preferred_country", length = 50)
+    private String preferredCountry;
+
+    @Column(name = "role", nullable = false, length = 20)
+    @Builder.Default
+    private String role = "USER";
+
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private boolean isDeleted = false;
 
     public String updateNickname(String nickname) {
         this.nickname = nickname;
@@ -38,4 +52,8 @@ public class User extends BaseEntity {
         this.profileImage = profileImage;
         return this.profileImage;
     }
-}
+
+    public void updatePreferredCountry(String preferredCountry) {
+        this.preferredCountry = preferredCountry;
+    }
+    }

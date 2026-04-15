@@ -25,4 +25,10 @@ public class UserService {
         }
         return user.updateNickname(newNickname);
     }
+
+    @Transactional
+    public void updatePreferredCountry(User user, String country) {
+        user.updatePreferredCountry(country);
+        userRepository.save(user);
+    }
 }
