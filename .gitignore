@@ -35,3 +35,4 @@ out/
 
 ### VS Code ###
 .vscode/
+\n.DS_Store\n.env\nrun.sh\nscripts/\nk8s/\n.claude/
