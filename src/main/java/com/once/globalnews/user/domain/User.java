@@ -36,6 +36,9 @@ public class User extends BaseEntity {
     @Column(name = "profile_image", length = 255)
     private String profileImage;
 
+    @Column(name = "preferred_country", length = 50)
+    private String preferredCountry;
+
     @Column(name = "role", nullable = false, length = 20)
     @Builder.Default
     private String role = "USER";
@@ -52,5 +55,9 @@ public class User extends BaseEntity {
     public String updateProfileImage(String profileImage) {
         this.profileImage = profileImage;
         return this.profileImage;
+    }
+
+    public void updatePreferredCountry(String preferredCountry) {
+        this.preferredCountry = preferredCountry;
     }
 }
