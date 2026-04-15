@@ -32,10 +32,10 @@ spring:
   ai:
     bedrock:
       mock:
-        enabled: true
+        enabled: false
       aws:
-        access-key: test-key
-        secret-key: test-secret
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_ACCESS_KEY}
       anthropic:
         chat:
           max-tokens: 2000

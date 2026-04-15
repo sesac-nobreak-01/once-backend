@@ -49,7 +49,6 @@ public class ChatSession extends BaseEntity {
     @Column(name = "news_url", length = 1000)
     private String newsUrl;
 
-    @Builder.Default
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
