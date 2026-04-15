@@ -70,14 +70,22 @@ public class KakaoUserInfoResponse {
         @JsonProperty("ci_authenticated_at")
         public Date ciCreatedAt;
 
+        //이메일 제공 동의 여부
+        @JsonProperty("email_needs_agreement")
+        public Boolean isEmailAgree;
+
+        //사용자 이메일
+        @JsonProperty("email")
+        public String email;
+
         @Getter
         @NoArgsConstructor
         @JsonIgnoreProperties(ignoreUnknown = true)
         public class Profile {
 
             //닉네임
-//            @JsonProperty("nickname")
-//            public String nickName;
+            @JsonProperty("nickname")
+            public String nickName;
 
             //프로필 미리보기 이미지 URL
             @JsonProperty("thumbnail_image_url")

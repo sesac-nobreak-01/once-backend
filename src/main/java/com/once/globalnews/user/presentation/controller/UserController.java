@@ -36,4 +36,18 @@ public class UserController {
                 SuccessStatus.UPDATE_NICKNAME_SUCCESS,
                 userService.updateNickname(user, updateNicknameRequest));
     }
+
+    @Operation(
+            summary = "선호 국가 수정 API",
+            description = ""
+    )
+    @PatchMapping("/country")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Void> updateCountry(
+            @Parameter(hidden = true) @GlobalNewsUser User user,
+            @RequestBody @jakarta.validation.Valid com.once.globalnews.user.presentation.model.request.UpdateCountryRequest updateCountryRequest)
+    {
+        userService.updatePreferredCountry(user, updateCountryRequest.country());
+        return ApiResponse.onSuccess(SuccessStatus.OK, null);
+    }
 }

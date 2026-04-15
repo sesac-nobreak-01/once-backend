@@ -13,6 +13,7 @@ public class SecurityConstants {
             "/api/v1/auth/callback",
             "/api/v1/auth/refresh",
             "/api/v1/auth/logout",
+            "/api/v1/auth/dev-login",
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/v3/api-docs/**",

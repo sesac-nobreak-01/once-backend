@@ -49,7 +49,7 @@ public class AuthController {
 
         return ApiResponse.onSuccess(
                 SuccessStatus.USER_KAKAO_LOGIN_SUCCESS,
-                new AccessTokenResponse(newAccessToken, authService.isFirstLogin(user)));
+                new AccessTokenResponse(newAccessToken, authService.isFirstLogin(user), user.getNickname(), user.getProfileImage(), user.getPreferredCountry()));
     }
 
     @Operation(
@@ -70,7 +70,7 @@ public class AuthController {
         );
         return ApiResponse.onSuccess(
                 SuccessStatus.OK,
-                new AccessTokenResponse(newAccessToken, authService.isFirstLogin(user))
+                new AccessTokenResponse(newAccessToken, authService.isFirstLogin(user), user.getNickname(), user.getProfileImage(), user.getPreferredCountry())
         );
     }
 
@@ -91,5 +91,42 @@ public class AuthController {
     @ResponseStatus(HttpStatus.OK)
     public String test(@GlobalNewsUser User user) {
         return user.getNickname();
+    }
+
+    @Operation(summary = "개발용 테스트 로그인", description = "임의의 카카오 ID로 유저를 생성하고 토큰을 발급합니다.")
+    @GetMapping("/dev-login")
+    public ApiResponse<AccessTokenResponse> devLogin(
+            @RequestParam("kakaoId") Long kakaoId,
+            HttpServletResponse response
+    ) {
+        log.info("[AuthController] devLogin called, kakaoId: {}", kakaoId);
+        
+        // NPE 방지를 위해 필요한 하위 객체들을 모두 생성
+        com.once.globalnews.user.presentation.model.response.KakaoUserInfoResponse userInfo = 
+            new com.once.globalnews.user.presentation.model.response.KakaoUserInfoResponse();
+        userInfo.id = kakaoId;
+        
+        // KakaoAccount와 Profile 객체 생성 및 연결
+        com.once.globalnews.user.presentation.model.response.KakaoUserInfoResponse.KakaoAccount account = 
+            userInfo.new KakaoAccount();
+        com.once.globalnews.user.presentation.model.response.KakaoUserInfoResponse.KakaoAccount.Profile profile = 
+            account.new Profile();
+        
+        account.profile = profile;
+        userInfo.kakaoAccount = account;
+        
+        // 가상의 닉네임 설정 (테스트 유저 구분을 위해)
+        profile.nickName = "TestUser_" + kakaoId;
+        
+        User user = authService.generateUserAfterKakaoAuth(userInfo);
+        String newAccessToken = jwtTokenProvider.createAccessToken(user);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(user);
+
+        refreshTokenService.store(newRefreshToken, user.getId(), Duration.ofSeconds(refreshTokenValidityInSeconds));
+        response.addHeader(HttpHeaders.SET_COOKIE, authCookieFactory.buildRefreshCookie(newRefreshToken, refreshTokenValidityInSeconds).toString());
+
+        return ApiResponse.onSuccess(
+                SuccessStatus.USER_KAKAO_LOGIN_SUCCESS,
+                new AccessTokenResponse(newAccessToken, authService.isFirstLogin(user), user.getNickname(), user.getProfileImage(), user.getPreferredCountry()));
     }
 }
