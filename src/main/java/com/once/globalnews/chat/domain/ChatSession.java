@@ -12,7 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "chat_rooms")
+@Table(name = "chat_rooms", indexes = {
+    @Index(name = "idx_chat_rooms_user_id", columnList = "user_id"),
+    @Index(name = "idx_chat_rooms_article_id", columnList = "article_id"),
+    @Index(name = "idx_chat_rooms_created_at", columnList = "created_at DESC")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatSession extends BaseEntity {
@@ -45,6 +49,7 @@ public class ChatSession extends BaseEntity {
     @Column(name = "news_url", length = 1000)
     private String newsUrl;
 
+    @Builder.Default
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 

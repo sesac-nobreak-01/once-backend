@@ -1,67 +1,93 @@
+# ========================================
+# 기본 설정 (모든 환경 공통)
+# ========================================
 spring:
   application:
     name: globalnews
+
+  # 데이터소스 기본값 (로컬 개발용)
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/once_db}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 30000
+      minimum-idle: 5
+      maximum-pool-size: 10
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+
+  # JPA 공통 설정
   jpa:
-    hibernate:
-      ddl-auto: ${DDL_AUTO:validate}  # 운영: validate, 개발: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-    show-sql: ${SHOW_SQL:false}
-  h2:
-    console:
-      enabled: false  # PostgreSQL 사용 시 H2 콘솔 비활성화
+        jdbc:
+          batch_size: 25
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
+
+  # Redis 공통 설정
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  # AI/Bedrock 공통 설정
   ai:
     bedrock:
-      mock:
-        enabled: ${BEDROCK_MOCK_ENABLED:false}
-      aws:
-        region: ${AWS_REGION:ap-northeast-2}
-        access-key: ${AWS_ACCESS_KEY_ID:}
-        secret-key: ${AWS_SECRET_ACCESS_KEY:}
       anthropic:
         chat:
           enabled: true
           model: ${BEDROCK_MODEL_ID:global.anthropic.claude-sonnet-4-6}
           temperature: 0.7
-          max-tokens: 2000
+      aws:
+        region: ${AWS_REGION:ap-northeast-2}
 
+# ========================================
+# 보안 설정
+# ========================================
 jwt:
   secret: ${JWT_SECRET}
-  access-token-validity-in-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_IN_SECONDS}
-  refresh-token-validity-in-seconds: ${JWT_REFRESH_TOKEN_VALIDITY_IN_SECONDS}
+  access-token-validity-in-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_IN_SECONDS:3600}
+  refresh-token-validity-in-seconds: ${JWT_REFRESH_TOKEN_VALIDITY_IN_SECONDS:2592000}
 
 kakao:
   client_id: ${REST_API_KEY}
   redirect_uri: ${KAKAO_REDIRECT_URI}
 
-# Chat 설정
+# ========================================
+# 비즈니스 설정
+# ========================================
 chat:
   rate-limit:
-    daily-limit: ${CHAT_DAILY_LIMIT:100}  # 20 -> 100으로 증가
+    daily-limit: ${CHAT_DAILY_LIMIT:100}
     reset-hours: 24
     ttl-seconds: 86400
   message-limit:
-    max-messages-per-session: 200  # 100 -> 200으로 증가
-    max-sessions-per-user: 100  # 50 -> 100으로 증가
-    history-limit: 20  # 10 -> 20으로 증가 (더 많은 컨텍스트)
-    max-message-length: 5000  # 2000 -> 5000자로 증가
+    max-messages-per-session: 200
+    max-sessions-per-user: 100
+    history-limit: 20
+    max-message-length: 5000
   ai:
-    response-timeout: 60  # 30 -> 60초로 증가
-    max-tokens: 4000  # 2000 -> 4000으로 증가
+    response-timeout: 60
+    max-tokens: 4000
     max-retries: 3
 
-logging:
-  level:
-    com.once.globalnews.chat: DEBUG
-    org.springframework.web.reactive.function.client: DEBUG
+# ========================================
+# 모니터링
+# ========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
