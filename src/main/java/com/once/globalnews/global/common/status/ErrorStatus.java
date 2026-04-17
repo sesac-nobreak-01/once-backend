@@ -35,7 +35,19 @@ public enum ErrorStatus {
     CHAT_SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT404", "채팅 세션을 찾을 수 없습니다."),
     CHAT_MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT404", "채팅 메시지를 찾을 수 없습니다."),
     CHAT_AI_SERVICE_ERROR(HttpStatus.SERVICE_UNAVAILABLE, "CHAT503", "AI 서비스가 일시적으로 사용할 수 없습니다."),
-    CHAT_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "CHAT400", "잘못된 채팅 요청입니다.");
+    CHAT_INVALID_REQUEST(HttpStatus.BAD_REQUEST, "CHAT400", "잘못된 채팅 요청입니다."),
+
+    // Chat Attachment Error
+    CHAT_ATTACHMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT_ATTACH_404", "첨부파일을 찾을 수 없습니다."),
+    CHAT_ATTACHMENT_FORBIDDEN(HttpStatus.FORBIDDEN, "CHAT_ATTACH_403", "해당 첨부파일에 접근할 권한이 없습니다."),
+    CHAT_ATTACHMENT_INVALID_MIME(HttpStatus.BAD_REQUEST, "CHAT_ATTACH_400", "지원하지 않는 파일 형식입니다."),
+    CHAT_ATTACHMENT_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "CHAT_ATTACH_413", "파일 크기가 허용 한도를 초과했습니다."),
+    CHAT_ATTACHMENT_ALREADY_LINKED(HttpStatus.CONFLICT, "CHAT_ATTACH_409", "이미 메시지에 연결된 첨부파일입니다."),
+    CHAT_ATTACHMENT_INVALID_STATE(HttpStatus.BAD_REQUEST, "CHAT_ATTACH_400", "첨부파일 상태가 유효하지 않습니다."),
+    CHAT_ATTACHMENT_COUNT_EXCEEDED(HttpStatus.BAD_REQUEST, "CHAT_ATTACH_400", "메시지당 첨부 가능한 파일 수를 초과했습니다."),
+    CHAT_UPLOAD_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "CHAT_ATTACH_429", "일일 업로드 한도를 초과했습니다."),
+    STORAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE500", "스토리지 업로드 처리에 실패했습니다."),
+    STORAGE_DOWNLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "STORAGE500", "스토리지 다운로드 처리에 실패했습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

@@ -29,6 +29,11 @@ public class ChatProperties {
      */
     private AI ai = new AI();
 
+    /**
+     * 첨부파일 설정
+     */
+    private Attachment attachment = new Attachment();
+
     @Getter
     @Setter
     public static class RateLimit {
@@ -89,5 +94,13 @@ public class ChatProperties {
          * 재시도 횟수
          */
         private int maxRetries = 2;
+    }
+
+    @Getter
+    @Setter
+    public static class Attachment {
+        private int perMessageMaxCount = 5;
+        private int uploadRateLimitPerDay = 50;
+        private long maxImageBase64SourceBytes = 3_750_000L;
     }
 }

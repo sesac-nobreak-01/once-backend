@@ -29,6 +29,7 @@ public class ChatRateLimitService {
 
     private static final String RATE_LIMIT_KEY_PREFIX = "chat:rate_limit:";
     private static final String DAILY_KEY_SUFFIX = ":daily";
+    private static final String UPLOAD_LIMIT_KEY_PREFIX = "chat:upload_limit:";
 
     /**
      * Rate limit 체크 및 카운트 증가
@@ -126,11 +127,53 @@ public class ChatRateLimitService {
     }
 
     /**
+     * 업로드 Rate limit 체크 및 카운트 증가
+     */
+    public void checkAndIncrementUploadLimit(User user) {
+        String key = getUploadLimitKey(user.getId());
+        ValueOperations<String, String> ops = redisTemplate.opsForValue();
+
+        String currentCountStr = ops.get(key);
+        int currentCount = currentCountStr != null ? Integer.parseInt(currentCountStr) : 0;
+        int dailyLimit = chatProperties.getAttachment().getUploadRateLimitPerDay();
+
+        if (currentCount >= dailyLimit) {
+            long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+            long hoursUntilReset = ttl > 0 ? (ttl / 3600) + 1 : chatProperties.getRateLimit().getResetHours();
+
+            log.warn("Upload rate limit exceeded for user: {} (current: {}/{})",
+                    user.getId(), currentCount, dailyLimit);
+
+            throw new ChatRateLimitException(
+                    String.format("일일 업로드 한도(%d회)를 초과했습니다. %d시간 후에 다시 시도해주세요.",
+                            dailyLimit, hoursUntilReset),
+                    currentCount,
+                    dailyLimit,
+                    hoursUntilReset
+            );
+        }
+
+        Long newCount = ops.increment(key);
+        if (newCount != null && newCount == 1) {
+            long secondsUntilMidnight = getSecondsUntilMidnight();
+            redisTemplate.expire(key, secondsUntilMidnight, TimeUnit.SECONDS);
+        }
+
+        log.info("Upload rate limit incremented for user: {} ({}/{})",
+                user.getId(), newCount, dailyLimit);
+    }
+
+    /**
      * Rate limit Redis 키 생성
      */
     private String getRateLimitKey(Long userId) {
         String date = LocalDate.now().toString();
         return RATE_LIMIT_KEY_PREFIX + userId + ":" + date + DAILY_KEY_SUFFIX;
+    }
+
+    private String getUploadLimitKey(Long userId) {
+        String date = LocalDate.now().toString();
+        return UPLOAD_LIMIT_KEY_PREFIX + userId + ":" + date;
     }
 
     /**
