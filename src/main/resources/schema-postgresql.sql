@@ -2,6 +2,7 @@
 -- Date: 2026-04-14
 
 -- Drop existing tables if they exist (be careful in production!)
+DROP TABLE IF EXISTS reviews CASCADE;
 DROP TABLE IF EXISTS chat_attachments CASCADE;
 DROP TABLE IF EXISTS chat_messages CASCADE;
 DROP TABLE IF EXISTS chat_rooms CASCADE;
@@ -139,3 +140,26 @@ COMMENT ON COLUMN chat_attachments.status IS 'PENDING_UPLOAD / UPLOADED / LINKED
 COMMENT ON COLUMN chat_attachments.kind IS 'IMAGE / DOCUMENT / TEXT / OTHER (LLM payload 분기)';
 COMMENT ON COLUMN chat_attachments.s3_key IS 'S3 object key (chat/{userId}/{yyyy}/{MM}/{publicId}/{filename})';
 COMMENT ON COLUMN chat_attachments.extracted_text IS 'Phase 3: Tika 로 추출한 텍스트 캐시';
+
+-- Create reviews table
+CREATE TABLE reviews (
+    review_id  BIGSERIAL PRIMARY KEY,
+    user_id    BIGINT      NOT NULL,
+    rating     INTEGER     NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    content    TEXT,
+    created_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reviews_user
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_reviews_user_id    ON reviews(user_id);
+CREATE INDEX idx_reviews_created_at ON reviews(created_at DESC);
+
+CREATE TRIGGER update_reviews_updated_at BEFORE UPDATE ON reviews
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TABLE  reviews            IS 'AI 채팅 서비스 후기 테이블';
+COMMENT ON COLUMN reviews.rating     IS '별점 (1~5)';
+COMMENT ON COLUMN reviews.content    IS '후기 내용 (선택)';
+COMMENT ON COLUMN reviews.user_id    IS '후기 작성자 (사용자당 1개 제한)';
