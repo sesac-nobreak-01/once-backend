@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "chat_messages", indexes = {
     @Index(name = "idx_chat_messages_room_id", columnList = "room_id"),
@@ -34,6 +37,10 @@ public class ChatMessage extends BaseEntity {
 
     @Column(name = "token_count")
     private Integer tokenCount;
+
+    @OneToMany(mappedBy = "chatMessage", fetch = FetchType.LAZY,
+               cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatAttachment> attachments = new ArrayList<>();
 
     public enum MessageType {
         USER, ASSISTANT, SYSTEM

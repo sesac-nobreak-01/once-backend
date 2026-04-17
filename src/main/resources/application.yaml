@@ -82,6 +82,18 @@ chat:
     response-timeout: 60
     max-tokens: 4000
     max-retries: 3
+  attachment:
+    per-message-max-count: 5
+    upload-rate-limit-per-day: ${CHAT_UPLOAD_DAILY_LIMIT:50}
+    max-image-base64-source-bytes: 3750000
+
+storage:
+  s3:
+    bucket: ${CHAT_ATTACHMENTS_BUCKET:onec-chat-attachments-dev-apne2}
+    region: ${AWS_REGION:ap-northeast-2}
+    presign-ttl-seconds: 600
+    max-object-size-bytes: 33554432
+    allowed-image-mime-types: image/png,image/jpeg,image/webp,image/gif
 
 # ========================================
 # 모니터링

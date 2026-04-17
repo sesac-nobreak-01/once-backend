@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Schema(description = "메시지 전송 요청")
 @Getter
 @Builder
@@ -19,4 +21,8 @@ public class SendMessageRequest {
     @NotBlank(message = "메시지는 필수입니다")
     @Size(min = 1, max = 2000, message = "메시지는 1자 이상 2000자 이하여야 합니다")
     private String message;
+
+    @Schema(description = "첨부파일 ID 목록 (UPLOADED 상태여야 함, 최대 5개)", example = "[17, 18]")
+    @Size(max = 5, message = "첨부파일은 최대 5개까지만 전송할 수 있습니다")
+    private List<Long> attachmentIds;
 }
