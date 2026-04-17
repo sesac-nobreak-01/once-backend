@@ -1,6 +1,7 @@
 package com.once.globalnews.chat.infrastructure.bedrock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.once.globalnews.chat.domain.ChatAttachment;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,15 +30,17 @@ public class SimplifiedBedrockChatService {
     private final WebClient webClient;
     private final String modelId;
     private final ObjectMapper objectMapper;
+    private final BedrockContentBuilder bedrockContentBuilder;
 
     public SimplifiedBedrockChatService(
             @Value("${AWS_REGION:ap-northeast-2}") String region,
             @Value("${BEDROCK_API_KEY}") String apiKey,
-            @Value("${BEDROCK_MODEL_ID:global.anthropic.claude-sonnet-4-6}") String modelId
+            @Value("${BEDROCK_MODEL_ID:global.anthropic.claude-sonnet-4-6}") String modelId,
+            BedrockContentBuilder bedrockContentBuilder
     ) {
-        // 버퍼 크기를 늘려서 큰 응답도 처리할 수 있도록 설정
+        // 이미지 멀티모달 base64 payload (최대 5개 * 3.75MB * 4/3) 고려하여 32MB 로 상향
         ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024)) // 10MB
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(32 * 1024 * 1024))
                 .build();
 
         this.webClient = WebClient.builder()
@@ -49,10 +52,14 @@ public class SimplifiedBedrockChatService {
                 .build();
         this.modelId = modelId;
         this.objectMapper = new ObjectMapper();
+        this.bedrockContentBuilder = bedrockContentBuilder;
         log.info("✅ Bedrock Chat Service (API Key mode) initialized");
         log.info("  - Region: {}", region);
         log.info("  - Model ID: {}", modelId);
-        log.info("  - API Key: {}...", apiKey != null && apiKey.length() > 10 ? apiKey.substring(0, 10) : "NOT SET");
+        log.info("  - API Key: {}... (length={}, endsWith={})",
+                apiKey != null && apiKey.length() > 10 ? apiKey.substring(0, 10) : "NOT SET",
+                apiKey != null ? apiKey.length() : 0,
+                apiKey != null && apiKey.length() > 4 ? apiKey.substring(apiKey.length() - 4) : "");
         log.info("  - Base URL: https://bedrock-runtime.{}.amazonaws.com", region);
     }
 
@@ -62,9 +69,15 @@ public class SimplifiedBedrockChatService {
         """;
 
     public String generateResponse(String userMessage, String newsContext, List<ChatHistoryMessage> chatHistory) {
+        return generateResponse(userMessage, newsContext, chatHistory, null);
+    }
+
+    public String generateResponse(String userMessage, String newsContext,
+                                   List<ChatHistoryMessage> chatHistory,
+                                   List<ChatAttachment> currentAttachments) {
         try {
             Map<String, Object> messages = new HashMap<>();
-            messages.put("messages", buildMessages(userMessage, newsContext, chatHistory));
+            messages.put("messages", buildMessages(userMessage, newsContext, chatHistory, currentAttachments));
             messages.put("max_tokens", 4000);  // 2000 -> 4000으로 증가
             messages.put("temperature", 0.7);
             messages.put("anthropic_version", "bedrock-2023-05-31");
@@ -119,7 +132,9 @@ public class SimplifiedBedrockChatService {
         return newsContext != null ? SYSTEM_PROMPT + "\n\n분석 대상 뉴스:\n" + newsContext : SYSTEM_PROMPT;
     }
 
-    private List<Map<String, Object>> buildMessages(String userMessage, String newsContext, List<ChatHistoryMessage> chatHistory) {
+    private List<Map<String, Object>> buildMessages(String userMessage, String newsContext,
+                                                    List<ChatHistoryMessage> chatHistory,
+                                                    List<ChatAttachment> currentAttachments) {
         List<Map<String, Object>> messages = new java.util.ArrayList<>();
         if (chatHistory != null) {
             for (ChatHistoryMessage msg : chatHistory) {
@@ -127,7 +142,13 @@ public class SimplifiedBedrockChatService {
                 messages.add(Map.of("role", role, "content", msg.getContent()));
             }
         }
-        messages.add(Map.of("role", "user", "content", userMessage));
+        if (currentAttachments == null || currentAttachments.isEmpty()) {
+            messages.add(Map.of("role", "user", "content", userMessage));
+        } else {
+            messages.add(Map.of(
+                    "role", "user",
+                    "content", bedrockContentBuilder.buildUserContent(userMessage, currentAttachments)));
+        }
         return messages;
     }
 }

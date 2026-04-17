@@ -1,9 +1,11 @@
 package com.once.globalnews.chat.application;
 
+import com.once.globalnews.chat.domain.ChatAttachment;
 import com.once.globalnews.chat.domain.ChatMessage;
 import com.once.globalnews.chat.domain.ChatSession;
 import com.once.globalnews.chat.infrastructure.bedrock.SimplifiedBedrockChatService;
 import com.once.globalnews.chat.infrastructure.bedrock.ChatHistoryMessage;
+import com.once.globalnews.chat.infrastructure.persistence.ChatAttachmentRepository;
 import com.once.globalnews.chat.infrastructure.persistence.ChatMessageRepository;
 import com.once.globalnews.chat.infrastructure.persistence.ChatSessionRepository;
 import com.once.globalnews.chat.presentation.model.request.CreateChatRequest;
@@ -33,8 +35,10 @@ public class ChatService {
 
     private final ChatSessionRepository chatSessionRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final ChatAttachmentRepository chatAttachmentRepository;
     private final SimplifiedBedrockChatService bedrockChatService;
     private final ChatRateLimitService rateLimitService;
+    private final ChatAttachmentService chatAttachmentService;
     private final jakarta.persistence.EntityManager entityManager;
 
     /**
@@ -42,11 +46,34 @@ public class ChatService {
      */
     @Transactional
     public ChatSessionDetailResponse createChatSession(User user, CreateChatRequest request) {
+        boolean hasFirstMessage = request.getFirstMessage() != null
+                && !request.getFirstMessage().isEmpty();
+
         // 기존 활성 세션이 있는지 확인 (동일한 뉴스 기사에 대해)
         if (request.getNewsId() != null) {
-            return chatSessionRepository.findFirstByUserAndNewsIdAndIsActiveTrueOrderByCreatedAtDesc(user, request.getNewsId())
-                    .map(session -> getChatSessionDetail(user, session.getId()))
-                    .orElseGet(() -> createNewChatSession(user, request));
+            var existing = chatSessionRepository
+                    .findFirstByUserAndNewsIdAndIsActiveTrueOrderByCreatedAtDesc(user, request.getNewsId());
+            if (existing.isPresent()) {
+                ChatSessionDetailResponse detail = getChatSessionDetail(user, existing.get().getId());
+                if (hasFirstMessage) {
+                    sendMessage(user, detail.getSessionId(),
+                            SendMessageRequest.builder().message(request.getFirstMessage()).build());
+                    return getChatSessionDetail(user, detail.getSessionId());
+                }
+                return detail;
+            }
+        }
+
+        // 첫 메시지가 없으면 빈 세션을 만들지 않고, 메시지 목록 없는 임시 응답을 돌려준다.
+        // (첫 메시지 전송 시점에 실제 세션 생성)
+        if (!hasFirstMessage) {
+            return ChatSessionDetailResponse.builder()
+                    .sessionId(null)
+                    .title("새 채팅")
+                    .newsId(request.getNewsId())
+                    .newsTitle(request.getNewsTitle())
+                    .messages(java.util.Collections.emptyList())
+                    .build();
         }
 
         return createNewChatSession(user, request);
@@ -91,6 +118,10 @@ public class ChatService {
                 .orElseThrow(() -> new ServiceException(ErrorStatus.CHAT_SESSION_NOT_FOUND.getCode(),
                         ErrorStatus.CHAT_SESSION_NOT_FOUND.getMessage()));
 
+        // 첨부파일 검증 (소유권 / 상태 / 개수)
+        List<ChatAttachment> attachments = chatAttachmentService.findLinkableForUser(
+                user, request.getAttachmentIds());
+
         // 사용자 메시지 저장
         ChatMessage userMessage = ChatMessage.builder()
                 .chatSession(chatSession)
@@ -101,6 +132,11 @@ public class ChatService {
         chatSession.addMessage(userMessage);
         chatMessageRepository.save(userMessage);
 
+        // 첨부파일을 메시지에 링크 (status=LINKED)
+        if (!attachments.isEmpty()) {
+            chatAttachmentService.linkToMessage(attachments, userMessage);
+        }
+
         // 이전 대화 내역 준비
         List<ChatHistoryMessage> chatHistory = chatSession.getMessages().stream()
                 .filter(msg -> !msg.equals(userMessage))  // 방금 추가한 메시지 제외
@@ -110,12 +146,13 @@ public class ChatService {
                 ))
                 .collect(Collectors.toList());
 
-        // AI 응답 생성
+        // AI 응답 생성 (첨부 이미지가 있으면 멀티모달 content 배열로 전달)
         String newsContext = buildNewsContext(chatSession);
         String aiResponse = bedrockChatService.generateResponse(
                 request.getMessage(),
                 newsContext,
-                chatHistory
+                chatHistory,
+                attachments
         );
 
         // AI 응답 메시지 저장
@@ -184,6 +221,10 @@ public class ChatService {
         ChatSession chatSession = chatSessionRepository.findByIdAndUser(sessionId, user)
                 .orElseThrow(() -> new ServiceException(ErrorStatus.CHAT_SESSION_NOT_FOUND.getCode(),
                         ErrorStatus.CHAT_SESSION_NOT_FOUND.getMessage()));
+
+        // chat_attachments.message_id FK 가 RESTRICT 라, 메시지 삭제 전 선행 삭제 필요
+        chatAttachmentRepository.deleteAllByChatSession(chatSession);
+        chatAttachmentRepository.flush();
 
         chatSessionRepository.delete(chatSession);
     }
