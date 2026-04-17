@@ -23,7 +23,10 @@ public enum SuccessStatus{
     CHAT_SESSION_DELETED(HttpStatus.NO_CONTENT, "CHAT204", "채팅 세션이 삭제되었습니다."),
     CHAT_ATTACHMENT_PRESIGNED(HttpStatus.CREATED, "CHAT_ATTACH201", "업로드 URL이 발급되었습니다."),
     CHAT_ATTACHMENT_CONFIRMED(HttpStatus.OK, "CHAT_ATTACH200", "첨부파일 업로드가 확인되었습니다."),
-    CHAT_ATTACHMENT_DOWNLOAD_ISSUED(HttpStatus.OK, "CHAT_ATTACH200", "첨부파일 다운로드 URL이 발급되었습니다.");
+    CHAT_ATTACHMENT_DOWNLOAD_ISSUED(HttpStatus.OK, "CHAT_ATTACH200", "첨부파일 다운로드 URL이 발급되었습니다."),
+
+    // Review 관련 응답
+    REVIEW_CREATED(HttpStatus.CREATED, "REVIEW201", "후기가 작성되었습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
