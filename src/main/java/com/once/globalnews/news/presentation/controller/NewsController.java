@@ -36,10 +36,9 @@ public class NewsController {
     @Operation(summary = "뉴스 상세 조회", description = "특정 뉴스 기사의 상세 정보를 조회합니다.")
     @GetMapping("/{id}")
     public ApiResponse<NewsResponse> getNewsDetail(
-            @PathVariable("id") String articleId,
-            @RequestParam(defaultValue = "false") boolean includeFullContent
+            @PathVariable("id") String articleId
     ) {
-        NewsResponse response = newsService.getNewsDetail(articleId, includeFullContent);
+        NewsResponse response = newsService.getNewsDetail(articleId);
         return ApiResponse.onSuccess(SuccessStatus.OK, response);
     }
 }
