@@ -23,7 +23,9 @@ public class UserService {
         if (userRepository.existsByNickname(newNickname)) {
             throw ErrorStatus.DUPLICATE_NICKNAME.serviceException();
         }
-        return user.updateNickname(newNickname);
+        String updated = user.updateNickname(newNickname);
+        userRepository.save(user);
+        return updated;
     }
 
     @Transactional
