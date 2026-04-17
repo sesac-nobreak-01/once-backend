@@ -15,16 +15,13 @@ import java.util.UUID;
 @Repository
 public interface NewsArticleRepository extends JpaRepository<NewsArticle, UUID> {
 
-    @Query("SELECT na FROM NewsArticle na JOIN FETCH na.source WHERE na.articleId = :articleId")
-    Optional<NewsArticle> findByArticleIdWithSource(@Param("articleId") String articleId);
+    Optional<NewsArticle> findByArticleId(String articleId);
 
-    @Query("SELECT na FROM NewsArticle na JOIN FETCH na.source WHERE na.id = :id")
-    Optional<NewsArticle> findByIdWithSource(@Param("id") UUID id);
-
-    @Query("SELECT na FROM NewsArticle na JOIN FETCH na.source " +
+    @Query("SELECT na FROM NewsArticle na " +
            "WHERE (COALESCE(:countries, NULL) IS NULL OR na.country IN :countries) " +
            "AND (:category IS NULL OR na.category = :category) " +
-           "ORDER BY na.createdAt DESC")
+           "AND na.fullContentS3Key IS NOT NULL " +
+           "ORDER BY na.publishedAt DESC")
     Page<NewsArticle> findByCountriesAndCategory(
             @Param("countries") List<String> countries,
             @Param("category") String category,

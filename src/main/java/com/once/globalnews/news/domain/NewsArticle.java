@@ -21,37 +21,18 @@ public class NewsArticle extends BaseEntity {
     @Column(name = "article_id", nullable = false, unique = true, length = 255)
     private String articleId;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String url;
-
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String title;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    @Column(columnDefinition = "TEXT")
-    private String content;
+    @Column(name = "s3_url", columnDefinition = "TEXT")
+    private String s3Url;
 
     @Column(name = "full_content_s3_key", length = 500)
     private String fullContentS3Key;
 
-    @Column(name = "image_url", columnDefinition = "TEXT")
-    private String imageUrl;
+    @Column(name = "published_at", nullable = false)
+    private LocalDateTime publishedAt;
 
     @Column(nullable = false, length = 50)
     private String category;
 
     @Column(nullable = false, length = 10)
     private String country;
-
-    @Column(nullable = false, length = 10)
-    private String language;
-
-    @Column(name = "published_at", nullable = false)
-    private LocalDateTime publishedAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "source_id")
-    private NewsSource source;
 }

@@ -87,6 +87,10 @@ chat:
     upload-rate-limit-per-day: ${CHAT_UPLOAD_DAILY_LIMIT:50}
     max-image-base64-source-bytes: 3750000
 
+news:
+  s3:
+    bucket: ${NEWS_S3_BUCKET:global-news-ai}
+
 storage:
   s3:
     bucket: ${CHAT_ATTACHMENTS_BUCKET:onec-chat-attachments-dev-apne2}

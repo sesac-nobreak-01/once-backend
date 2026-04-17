@@ -43,9 +43,13 @@ public class S3ObjectMetadataReader {
     }
 
     public byte[] getObjectBytes(String s3Key) {
+        return getObjectBytes(s3Properties.getBucket(), s3Key);
+    }
+
+    public byte[] getObjectBytes(String bucket, String s3Key) {
         try {
             ResponseBytes<GetObjectResponse> bytes = s3Client.getObjectAsBytes(GetObjectRequest.builder()
-                    .bucket(s3Properties.getBucket())
+                    .bucket(bucket)
                     .key(s3Key)
                     .build());
             return bytes.asByteArray();
