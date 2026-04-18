@@ -1,0 +1,81 @@
+# ========================================
+# 프로덕션 환경 설정
+# ========================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  # RDS PostgreSQL
+  datasource:
+    url: ${DB_URL}  # 환경변수로 주입 필수
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 30  # 프로덕션은 더 큰 풀
+      pool-name: OnceProdHikariCP
+
+  # JPA 프로덕션 설정
+  jpa:
+    hibernate:
+      ddl-auto: validate  # 프로덕션은 반드시 validate
+    properties:
+      hibernate:
+        format_sql: false
+        connection:
+          provider_disables_autocommit: true
+    show-sql: false
+
+  # ElastiCache Redis
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  # 실제 Bedrock
+  ai:
+    bedrock:
+      mock:
+        enabled: false
+      aws:
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_ACCESS_KEY}
+      anthropic:
+        chat:
+          max-tokens: 4000
+
+# 프로덕션 카카오 설정
+kakao:
+  redirect_uri: ${KAKAO_REDIRECT_URI}  # 실제 도메인 필수
+
+# 프로덕션 모니터링
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+# 프로덕션 로깅
+logging:
+  level:
+    root: WARN
+    com.once.globalnews: INFO
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/once-backend/application.log
+    max-size: 100MB
+    max-history: 30

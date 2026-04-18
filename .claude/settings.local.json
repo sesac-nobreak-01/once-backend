@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep *)",
+      "Bash(find /c/sesac/once-backend/src/main/java/com/once/globalnews/news -type f -name \"*.java\" -exec basename {} \\\\;)"
+    ]
+  }
+}
