@@ -19,7 +19,7 @@ spring:
   # JPA 프로덕션 설정
   jpa:
     hibernate:
-      ddl-auto: validate  # 프로덕션은 반드시 validate
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: false

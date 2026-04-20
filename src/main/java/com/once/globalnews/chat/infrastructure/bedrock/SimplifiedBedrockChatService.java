@@ -25,7 +25,7 @@ import java.util.Map;
 @Service
 @Primary
 @ConditionalOnProperty(name = "spring.ai.bedrock.mock.enabled", havingValue = "false", matchIfMissing = true)
-public class SimplifiedBedrockChatService {
+public class SimplifiedBedrockChatService extends BedrockChatService {
 
     private final WebClient webClient;
     private final String modelId;

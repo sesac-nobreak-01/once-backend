@@ -32,7 +32,8 @@ spring:
   ai:
     bedrock:
       mock:
-        enabled: false
+#        enabled: false
+        enabled: true
       aws:
         access-key: ${AWS_ACCESS_KEY_ID}
         secret-key: ${AWS_SECRET_ACCESS_KEY}
