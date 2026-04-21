@@ -3,7 +3,7 @@ package com.once.globalnews.chat.application;
 import com.once.globalnews.chat.domain.ChatAttachment;
 import com.once.globalnews.chat.domain.ChatMessage;
 import com.once.globalnews.chat.domain.ChatSession;
-import com.once.globalnews.chat.infrastructure.bedrock.SimplifiedBedrockChatService;
+import com.once.globalnews.chat.infrastructure.bedrock.BedrockChatService;
 import com.once.globalnews.chat.infrastructure.bedrock.ChatHistoryMessage;
 import com.once.globalnews.chat.infrastructure.persistence.ChatAttachmentRepository;
 import com.once.globalnews.chat.infrastructure.persistence.ChatMessageRepository;
@@ -36,7 +36,7 @@ public class ChatService {
     private final ChatSessionRepository chatSessionRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ChatAttachmentRepository chatAttachmentRepository;
-    private final SimplifiedBedrockChatService bedrockChatService;
+    private final BedrockChatService bedrockChatService;
     private final ChatRateLimitService rateLimitService;
     private final ChatAttachmentService chatAttachmentService;
     private final jakarta.persistence.EntityManager entityManager;

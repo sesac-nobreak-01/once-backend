@@ -7,6 +7,8 @@ DROP TABLE IF EXISTS chat_attachments CASCADE;
 DROP TABLE IF EXISTS chat_messages CASCADE;
 DROP TABLE IF EXISTS chat_rooms CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS news_articles CASCADE;
+DROP TABLE IF EXISTS news_sources CASCADE;
 
 -- Create users table
 CREATE TABLE users (
@@ -15,6 +17,7 @@ CREATE TABLE users (
     email VARCHAR(255),
     nickname VARCHAR(50) NOT NULL,
     profile_image VARCHAR(255),
+    preferred_country VARCHAR(50),
     role VARCHAR(20) NOT NULL DEFAULT 'USER',
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -140,6 +143,40 @@ COMMENT ON COLUMN chat_attachments.status IS 'PENDING_UPLOAD / UPLOADED / LINKED
 COMMENT ON COLUMN chat_attachments.kind IS 'IMAGE / DOCUMENT / TEXT / OTHER (LLM payload 분기)';
 COMMENT ON COLUMN chat_attachments.s3_key IS 'S3 object key (chat/{userId}/{yyyy}/{MM}/{publicId}/{filename})';
 COMMENT ON COLUMN chat_attachments.extracted_text IS 'Phase 3: Tika 로 추출한 텍스트 캐시';
+
+-- Create news_sources table
+CREATE TABLE news_sources (
+    id          VARCHAR(255) PRIMARY KEY,
+    name        VARCHAR(255) NOT NULL,
+    url         TEXT,
+    country     VARCHAR(10),
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create news_articles table
+CREATE TABLE news_articles (
+    id                  UUID PRIMARY KEY,
+    article_id          VARCHAR(255) NOT NULL UNIQUE,
+    s3_url              TEXT,
+    full_content_s3_key VARCHAR(500),
+    published_at        TIMESTAMP NOT NULL,
+    category            VARCHAR(50) NOT NULL,
+    country             VARCHAR(10) NOT NULL,
+    created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_news_articles_article_id  ON news_articles(article_id);
+CREATE INDEX idx_news_articles_published_at ON news_articles(published_at DESC);
+CREATE INDEX idx_news_articles_category    ON news_articles(category);
+CREATE INDEX idx_news_articles_country     ON news_articles(country);
+
+CREATE TRIGGER update_news_articles_updated_at BEFORE UPDATE ON news_articles
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_news_sources_updated_at BEFORE UPDATE ON news_sources
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Create reviews table
 CREATE TABLE reviews (

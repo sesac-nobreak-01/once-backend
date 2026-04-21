@@ -1,7 +1,6 @@
 package com.once.globalnews.chat.infrastructure.bedrock;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.SdkBytes;
@@ -10,7 +9,6 @@ import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelRequest;
 import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,18 +16,23 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-@Service
 public class BedrockChatService {
 
     private final BedrockRuntimeClient bedrockRuntimeClient;
     private final ObjectMapper objectMapper;
     private final String modelId;
 
+    protected BedrockChatService() {
+        this.bedrockRuntimeClient = null;
+        this.objectMapper = new ObjectMapper();
+        this.modelId = null;
+    }
+
     public BedrockChatService(
-            @Value("${spring.ai.bedrock.aws.region:us-east-1}") String region,
-            @Value("${spring.ai.bedrock.aws.access-key}") String accessKey,
-            @Value("${spring.ai.bedrock.aws.secret-key}") String secretKey,
-            @Value("${spring.ai.bedrock.anthropic.chat.model:global.anthropic.claude-sonnet-4-6}") String modelId
+            String region,
+            String accessKey,
+            String secretKey,
+            String modelId
     ) {
         this.bedrockRuntimeClient = BedrockRuntimeClient.builder()
                 .region(Region.of(region))
@@ -39,6 +42,30 @@ public class BedrockChatService {
                 .build();
         this.objectMapper = new ObjectMapper();
         this.modelId = modelId;
+    }
+
+//    public BedrockChatService(
+//            @Value("${spring.ai.bedrock.aws.region:us-east-1}") String region,
+//            @Value("${spring.ai.bedrock.aws.access-key}") String accessKey,
+//            @Value("${spring.ai.bedrock.aws.secret-key}") String secretKey,
+//            @Value("${spring.ai.bedrock.anthropic.chat.model:global.anthropic.claude-sonnet-4-6}") String modelId
+//    ) {
+//        this.bedrockRuntimeClient = BedrockRuntimeClient.builder()
+//                .region(Region.of(region))
+//                .credentialsProvider(StaticCredentialsProvider.create(
+//                        AwsBasicCredentials.create(accessKey, secretKey)
+//                ))
+//                .build();
+//        this.objectMapper = new ObjectMapper();
+//        this.modelId = modelId;
+//    }
+
+
+
+    public String generateResponse(String userMessage, String newsContext,
+                                   List<ChatHistoryMessage> chatHistory,
+                                   List<com.once.globalnews.chat.domain.ChatAttachment> attachments) {
+        return generateResponse(userMessage, newsContext, chatHistory);
     }
 
     private static final String SYSTEM_PROMPT = """
