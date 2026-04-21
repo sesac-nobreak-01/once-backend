@@ -15,11 +15,12 @@ spring:
       minimum-idle: 10
       maximum-pool-size: 30  # 프로덕션은 더 큰 풀
       pool-name: OnceProdHikariCP
+      auto-commit: false
 
   # JPA 프로덕션 설정
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: false
