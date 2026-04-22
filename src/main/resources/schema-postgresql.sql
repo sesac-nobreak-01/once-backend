@@ -163,6 +163,13 @@ CREATE TABLE news_articles (
     published_at        TIMESTAMP NOT NULL,
     category            VARCHAR(50) NOT NULL,
     country             VARCHAR(10) NOT NULL,
+    title               VARCHAR(500),
+    description         TEXT,
+    image_url           TEXT,
+    original_url        TEXT,
+    source_name         VARCHAR(255),
+    source_url          TEXT,
+    language            VARCHAR(10),
     created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
