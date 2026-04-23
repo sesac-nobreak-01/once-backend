@@ -32,3 +32,7 @@ public class GlobalnewsApplication {
 	}
 
 }
+
+
+
+// 안녕하세요
