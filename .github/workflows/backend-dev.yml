@@ -2,7 +2,8 @@ name: Backend Dev Deploy
 
 on:
   push:
-    branches: [develop]
+    branches:
+      - '**'
   workflow_dispatch:
 
 env:
