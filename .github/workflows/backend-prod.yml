@@ -50,3 +50,17 @@ jobs:
       - name: Print deployed image
         run: |
           echo "Deployed: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ steps.tags.outputs.image_tag }}"
+
+      - name: Update image tag in manifest repo
+        env:
+          IMAGE_TAG: ${{ steps.tags.outputs.image_tag }}
+          MANIFEST_REPO_TOKEN: ${{ secrets.MANIFEST_REPO_TOKEN }}
+        run: |
+          git clone https://x-access-token:${MANIFEST_REPO_TOKEN}@github.com/sesac-nobreak-02/once-backend-manifest-repo.git
+          cd once-backend-manifest-repo
+          sed -i "s|  tag: .*|  tag: \"${IMAGE_TAG}\"|" charts/backend/values.yaml
+          git config user.email "github-actions@github.com"
+          git config user.name "github-actions"
+          git add charts/backend/values.yaml
+          git commit -m "ci: update image tag to ${IMAGE_TAG}"
+          git push
