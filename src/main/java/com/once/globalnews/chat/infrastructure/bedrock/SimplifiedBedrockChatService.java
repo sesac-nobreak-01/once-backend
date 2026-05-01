@@ -9,9 +9,14 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
+import reactor.util.retry.Retry;
 import java.time.Duration;
 
 import java.util.HashMap;
@@ -43,8 +48,11 @@ public class SimplifiedBedrockChatService extends BedrockChatService {
                 .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(32 * 1024 * 1024))
                 .build();
 
+        HttpClient httpClient = HttpClient.create(ConnectionProvider.newConnection());
+
         this.webClient = WebClient.builder()
                 .baseUrl("https://bedrock-runtime." + region + ".amazonaws.com")
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader("Accept", MediaType.APPLICATION_JSON_VALUE)
@@ -102,7 +110,9 @@ public class SimplifiedBedrockChatService extends BedrockChatService {
                     .bodyToMono(String.class)
                     .doOnSuccess(res -> log.info("Bedrock API 호출 성공"))
                     .doOnError(err -> log.error("Bedrock API 호출 실패: {}", err.getMessage()))
-                    .timeout(Duration.ofSeconds(60))  // 30 -> 60초로 증가
+                    .timeout(Duration.ofSeconds(60))
+                    .retryWhen(Retry.backoff(2, Duration.ofSeconds(1))
+                            .filter(e -> e instanceof WebClientRequestException))
                     .block();
 
             log.debug("Bedrock API 응답: {}", response);
