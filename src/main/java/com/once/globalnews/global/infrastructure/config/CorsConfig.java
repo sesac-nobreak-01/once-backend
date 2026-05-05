@@ -20,6 +20,7 @@ public class CorsConfig {
             "http://localhost:5174",
             "http://127.0.0.1:5173",
             "https://globalnews.life",
+            "https://www.globalnews.life",
             "https://d1ccp5sibg7jmn.cloudfront.net"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
