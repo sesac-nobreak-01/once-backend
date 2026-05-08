@@ -24,6 +24,6 @@ public class CreateReviewRequest {
     private Integer rating;
 
     @Schema(description = "후기 내용", example = "AI 채팅 서비스가 정말 유용했어요!")
-    @Size(max = 500, message = "후기 내용은 500자 이내로 작성해 주세요.")
+    @Size(max = 50000, message = "후기 내용은 50000자 이내로 작성해 주세요.")
     private String content;
 }
