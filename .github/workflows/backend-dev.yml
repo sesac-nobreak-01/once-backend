@@ -66,4 +66,4 @@ jobs:
           git add charts/backend/values-seoul.yaml
           git diff --cached --quiet && echo "No image tag changes" && exit 0
           git commit -m "ci: update seoul image tag to ${{ steps.tags.outputs.image_tag }}"
-          git push
+          git push origin main
